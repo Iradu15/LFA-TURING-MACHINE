@@ -1,0 +1,27 @@
+States:
+q1, s
+q2
+q3
+q4
+q5
+q6, a
+q7, r
+END
+Tape alphabet:
+0
+x
+
+END
+Input alphabet:
+0
+END
+Transitions:
+(q1,0,x)to(q2, ,x,R,L)
+(q1,0,0)to(q6, ,x,R,R)
+(q1,x,0)to(q5, ,x,R,L)
+(q5,x,x)to(q6, ,x,R,L)
+END
+Input:
+0000
+0000
+END
