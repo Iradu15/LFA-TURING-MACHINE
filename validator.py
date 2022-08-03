@@ -1,4 +1,6 @@
-# Bondoc Ana, Rus Alexandru, Ionescu Radu
+#Bondoc Ana, Rus Alexandru, Ionescu Radu
+model_output1 = "" #input ul pe care il dam din fisier
+model_output2 = "" #input ul pe care il dam din fisier2
 
 stari = []
 stare_start = []
@@ -10,8 +12,9 @@ tranzitii = {}
 status = 0
 
 def validare(tip, stare, linie): #in loc de stare poate fi input, tranzitie, alfabet
-    global status
+    global status, model_output1, model_output2
     # in functie de tip validam: 3(tranzitia), 2(alfabet input), 1(tape input), 0(starile)
+
     if tip == 3:
         tranzitie = [i[1:-1].split(",") for i in stare.split("to")] # impartim dupa "to", si scapam de paranteze (), astfel filtram continutul
 
@@ -94,11 +97,10 @@ def validare(tip, stare, linie): #in loc de stare poate fi input, tranzitie, alf
                 break
         if ok == 0: 
             stari.append(stare)
-        
 
 
 def citire(nume):
-    global status
+    global status, model_output1, model_output2
     g = open(nume)
     ls = []
     for linie in g:
@@ -113,18 +115,34 @@ def citire(nume):
             a = 2
         elif ls[k] == "Transitions:": # verificam validitatea tranzsitiilor
             a = 3
+        elif ls[k] == "Input:": #verificam validitatea celor 2 inputuri
+            k += 1
+            model_output1 = ls[k] + ' ' # black space la final pe banda
+            k += 1
+            model_output2 = ls[k] + ' ' # black space la final pe banda
+
         k = k + 1
         while ls[k] != "END":
             validare(a, ls[k], k)
             k = k + 1
         k = k + 1
-
+  
 
 def validari():
-    global status
+    global model_output1, model_output2, status
     accept = 0
     reject = 0
     start = 0
+
+    for ch in model_output1:
+        if ch not in banda_alfabet:
+            status = 1
+            print(f"{ch} not in alphabet")
+            
+    for ch in model_output2:
+        if ch not in banda_alfabet:
+            status = 1
+            print(f"{ch} not in alphabet")
 
     stari_aiurea = []
 
@@ -181,8 +199,30 @@ def validari():
         print(f" start state should be unique")
 
 
+def parcurgere(TM, p1, p2):
+    global model_output1, model_output2
+    if TM == stare_acceptare[0] or TM == stare_reject[0]:
+        if TM == stare_acceptare[0]:
+            print("Automata is working properly")
+        else: 
+            print("Automata is not working properly")
+        return
+    
+    for i in range(0, len(tranzitii[TM])): #iteram prin tranzitiile starii curente
+        t = tranzitii[TM][i]
+        if t[0] == model_output1[p1] and t[1] == model_output2[p2]: #cautam tranzitia cu elementele corespunzatoare de pe banda 
+            dir1 = 1
+            if t[5] == 'L': #in functie de directie se misca capul
+                dir1 = -1
+            dir2 = 1
+            if t[6] == 'L': 
+                di2 = -1
 
-citire("tm_config_file")
+            parcurgere(t[2], p1 + dir1, p2 + dir2) #repetam pentru starea destinatie cu continutul benzilor corespunzator
+
+
+
+citire("tm_confing_input_file")
 
 for i in in_alfabet:
     # verificam ca alfabetul de input sa fie inclus in cel de tape
@@ -195,5 +235,9 @@ for i in in_alfabet:
         print(f" {i} is not included in tape alphabet")
 
 validari()
-if status == 0:
+
+if status == 0:#repsecta cerintele din fisierul de configurare 
     print("Good job, VALID")
+
+if status == 0:
+    parcurgere(stare_start[0], 0, 0)
